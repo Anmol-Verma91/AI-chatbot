@@ -5,9 +5,8 @@ const API_KEY = import.meta.env.VITE_API_KEY
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key="
 
 
-function ChatBox() {
+function ChatBox({messages, setMessages}) {
 
-    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
 
     const fetchChatResponse = async () => {
@@ -18,14 +17,14 @@ function ChatBox() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ "contents": [{ "parts": [{ "text": newMessage }] }] })
 
-              })
+            })
 
             if (!res.ok) throw new Error(`Error: ${res.status}`)
-                
+
             const data = await res.json()
             setMessages(prev => [...prev, { text: data.candidates[0].content.parts[0].text, sentByUser: false }]);
         } catch (error) {
-            console.log(error)
+            setMessages(prev => [...prev, { text:"unable to get message please check your connection and send message again", sentByUser: false }]);
         }
     }
 
@@ -40,17 +39,24 @@ function ChatBox() {
 
     return (
         <div className="w-full min-h-56 max-w-lg flex flex-col bg-white shadow-lg rounded-lg">
-            <div className="flex-1 p-4 overflow-y-auto">
-                {messages.map((message, index) => (
-                    <div
-                        key={index}
-                        className={`my-2 p-3 break-words ${message.sentByUser ? 'bg-green-500 text-white justify-self-end rounded-l-xl rounded-br-xl' : 'bg-gray-200 rounded-r-xl rounded-bl-xl'
-                            } max-w-xs`}
-                    >
-                        {message.text}
+            {messages.length < 1 ?
+             <div className='w-full h-56 text-center flex items-center justify-center'>
+                <p className='text-xl text-gray-500'>Start conversation</p>
+            </div> :
+                <>
+                    <div className="flex-1 p-4 overflow-y-auto">
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`my-2 p-3 break-words ${message.sentByUser ? 'bg-green-500 text-white justify-self-end rounded-l-xl rounded-br-xl' : 'bg-gray-200 rounded-r-xl rounded-bl-xl'
+                                    } max-w-xs`}
+                            >
+                                {message.text}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
+                </>
+            }
             <form className="p-4 bg-gray-100 flex" onSubmit={handleSendMessage}>
                 <input
                     type="text"
@@ -65,6 +71,9 @@ function ChatBox() {
                     Send
                 </button>
             </form>
+
+
+
         </div>
     );
 
